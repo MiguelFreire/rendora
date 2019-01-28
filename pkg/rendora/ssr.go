@@ -101,7 +101,7 @@ func (R *Rendora) getResponse(url string) (*HeadlessResponse, error) {
 		return resp, nil
 	}
 
-	dt, err := R.getHeadless(url)
+	dt, err := R.getHeadless("http://" + url)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,6 @@ func (R *Rendora) getResponse(url string) (*HeadlessResponse, error) {
 func (R *Rendora) getSSR(c *gin.Context) {
 
 	hostname := c.Request.Host
-
 	resp, err := R.getResponse(hostname + c.Request.RequestURI)
 	if err != nil {
 		c.AbortWithStatus(http.StatusServiceUnavailable)
