@@ -16,5 +16,13 @@ filters:
                 - slurp
                 - bing
                 - crawler
+                - google 
+                - baidu
+                - bing 
+                - msn
+                - duckduckbot
+                - teoma
+                - slurp
+                - yandex
 server:
   enable: true
