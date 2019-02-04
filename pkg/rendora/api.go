@@ -32,7 +32,7 @@ func (R *Rendora) apiRender(c *gin.Context) {
 		return
 	}
 
-	resp, err := R.getResponse(args.URI)
+	resp, err := R.getResponse(c.Request)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

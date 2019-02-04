@@ -96,6 +96,7 @@ func (R *Rendora) initRendoraServer() *http.Server {
 		WriteTimeout: 10 * time.Second,
 	}
 
+	 
 	return srv
 }
 

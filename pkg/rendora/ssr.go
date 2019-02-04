@@ -16,7 +16,8 @@ package rendora
 import (
 	"log"
 	"net/http"
-
+	"fmt"
+	"strings"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/tdewolff/minify/v2"
@@ -89,7 +90,24 @@ func (R *Rendora) getHeadless(url string) (*HeadlessResponse, error) {
 	return R.h.getResponse(url)
 }
 
-func (R *Rendora) getResponse(url string) (*HeadlessResponse, error) {
+func (R *Rendora) getResponse(req *http.Request) (*HeadlessResponse, error) {
+	uri := req.RequestURI
+	hostname := req.Host
+	
+	domains := strings.Split(hostname, ".")
+	fmt.Println("URI:", uri)
+	fmt.Println("Hostname:", hostname)
+	fmt.Println("Domains:", domains)
+	var url = "";
+	if (len(domains) == 4) {
+		url = "http://"+domains[0]+"."+domains[1]+".localhost:4000"+uri
+	} else {
+		url = "http://"+domains[0]+".localhost:4000"+uri
+	}
+
+
+	fmt.Println(url)
+
 	cKey := R.c.Cache.Redis.KeyPrefix + ":" + url
 	resp, exists, err := R.cache.get(cKey)
 
@@ -101,7 +119,7 @@ func (R *Rendora) getResponse(url string) (*HeadlessResponse, error) {
 		return resp, nil
 	}
 
-	dt, err := R.getHeadless("http://" + url)
+	dt, err := R.getHeadless(url)
 	if err != nil {
 		return nil, err
 	}
@@ -120,9 +138,7 @@ func (R *Rendora) getResponse(url string) (*HeadlessResponse, error) {
 }
 
 func (R *Rendora) getSSR(c *gin.Context) {
-
-	hostname := c.Request.Host
-	resp, err := R.getResponse(hostname + c.Request.RequestURI)
+	resp, err := R.getResponse(c.Request);
 	if err != nil {
 		c.AbortWithStatus(http.StatusServiceUnavailable)
 		return
