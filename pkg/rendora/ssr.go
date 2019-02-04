@@ -16,7 +16,6 @@ package rendora
 import (
 	"log"
 	"net/http"
-	"fmt"
 	"strings"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
@@ -95,18 +94,12 @@ func (R *Rendora) getResponse(req *http.Request) (*HeadlessResponse, error) {
 	hostname := req.Host
 	
 	domains := strings.Split(hostname, ".")
-	fmt.Println("URI:", uri)
-	fmt.Println("Hostname:", hostname)
-	fmt.Println("Domains:", domains)
 	var url = "";
 	if (len(domains) == 4) {
 		url = "http://"+domains[0]+"."+domains[1]+".localhost:4000"+uri
 	} else {
 		url = "http://"+domains[0]+".localhost:4000"+uri
 	}
-
-
-	fmt.Println(url)
 
 	cKey := R.c.Cache.Redis.KeyPrefix + ":" + url
 	resp, exists, err := R.cache.get(cKey)
