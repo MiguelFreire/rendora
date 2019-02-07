@@ -86,9 +86,9 @@ func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
 
 var targetURL string
 
-func (R *Rendora) getHeadless(uri string) (*HeadlessResponse, error) {
+func (R *Rendora) getHeadless(url string) (*HeadlessResponse, error) {
 	headless := R.pool.getHeadlessClient()
-	response, err := headless.getResponse(R.c.Target.URL + uri)
+	response, err := headless.getResponse(url)
 	R.pool.putHeadlessClient(headless)
 
 	return response, err
