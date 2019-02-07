@@ -14,10 +14,11 @@ limitations under the License.
 package rendora
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
-	"fmt"
+
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/tdewolff/minify/v2"
@@ -86,21 +87,25 @@ func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
 
 var targetURL string
 
-func (R *Rendora) getHeadless(url string) (*HeadlessResponse, error) {
-	return R.h.getResponse(url)
+func (R *Rendora) getHeadless(uri string) (*HeadlessResponse, error) {
+	headless := R.pool.getHeadlessClient()
+	response, err := headless.getResponse(R.c.Target.URL + uri)
+	R.pool.putHeadlessClient(headless)
+
+	return response, err
 }
 
 func (R *Rendora) getResponse(req *http.Request) (*HeadlessResponse, error) {
 	uri := req.RequestURI
 	hostname := req.Host
-	
+
 	domains := strings.Split(hostname, ".")
-	var url = "";
+	var url = ""
 	fmt.Println(domains)
-	if (len(domains) == 4) {
-		url = "http://"+domains[0]+"."+domains[1]+".localhost:4000"+uri
+	if len(domains) == 4 {
+		url = "http://" + domains[0] + "." + domains[1] + ".localhost:4000" + uri
 	} else {
-		url = "http://"+domains[0]+".localhost:4000"+uri
+		url = "http://" + domains[0] + ".localhost:4000" + uri
 	}
 	fmt.Println(url)
 	cKey := R.c.Cache.Redis.KeyPrefix + ":" + url
@@ -132,11 +137,12 @@ func (R *Rendora) getResponse(req *http.Request) (*HeadlessResponse, error) {
 	return dt, nil
 }
 
-func (R *Rendora) getSSR(c *gin.Context) {
-	resp, err := R.getResponse(c.Request);
+func (R *Rendora) getSSR(c *gin.Context) error {
+
+	resp, err := R.getResponse(c.Request)
 	if err != nil {
-		c.AbortWithStatus(http.StatusServiceUnavailable)
-		return
+		//c.AbortWithStatus(http.StatusServiceUnavailable)
+		return err
 	}
 
 	contentHdr, ok := resp.Headers["Content-Type"]
@@ -151,4 +157,5 @@ func (R *Rendora) getSSR(c *gin.Context) {
 		R.metrics.CountSSR.Inc()
 	}
 
+	return nil
 }

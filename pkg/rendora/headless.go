@@ -95,7 +95,7 @@ func checkHeadless(arg string) error {
 //NewHeadlessClient creates HeadlessClient
 func (R *Rendora) newHeadlessClient() error {
 	ret := &headlessClient{
-		Mtx: &sync.Mutex{},
+		Mtx:     &sync.Mutex{},
 		rendora: R,
 	}
 	ctx := context.Background()
@@ -169,6 +169,83 @@ func (R *Rendora) newHeadlessClient() error {
 	return nil
 }
 
+//NewHeadlessClient creates HeadlessClient
+func (R *Rendora) newHeadlessClient2(address string) (error, *headlessClient) {
+	ret := &headlessClient{
+		Mtx:     &sync.Mutex{},
+		rendora: R,
+	}
+	ctx := context.Background()
+
+	err := checkHeadless(address)
+	if err != nil {
+		return err, nil
+	}
+
+	// looks like cdp doesn't resolve hostnames automatically, may lead to problems when used with container networks
+	resolvedURL, err := resolveURLHostname(address)
+	if err != nil {
+		return err, nil
+	}
+
+	devt := devtool.New(resolvedURL)
+	pt, err := devt.Get(ctx, devtool.Page)
+	if err != nil {
+		pt, err = devt.Create(ctx)
+		if err != nil {
+			return err, nil
+		}
+	}
+
+	ret.RPCConn, err = rpcc.DialContext(ctx, pt.WebSocketDebuggerURL)
+	if err != nil {
+		return err, nil
+	}
+
+	ret.C = cdp.NewClient(ret.RPCConn)
+
+	domContent, err := ret.C.Page.DOMContentEventFired(ctx)
+	if err != nil {
+		return err, nil
+	}
+	defer domContent.Close()
+
+	if err = ret.C.Page.Enable(ctx); err != nil {
+		return err, nil
+	}
+
+	err = ret.C.Network.Enable(ctx, nil)
+	if err != nil {
+		return err, nil
+	}
+
+	headers := map[string]string{
+		"X-Rendora-Type": "RENDER",
+	}
+
+	headersStr, err := json.Marshal(headers)
+	if err != nil {
+		return err, nil
+	}
+
+	err = ret.C.Network.SetExtraHTTPHeaders(ctx, network.NewSetExtraHTTPHeadersArgs(headersStr))
+	if err != nil {
+		return err, nil
+	}
+
+	blockedURLs := network.NewSetBlockedURLsArgs(defaultBlockedURLs)
+
+	err = ret.C.Network.SetBlockedURLs(ctx, blockedURLs)
+
+	if err != nil {
+		return err, nil
+	}
+
+	R.h = ret
+
+	return nil, ret
+}
+
 //GoTo navigates to the url, fetches the DOM and returns HeadlessResponse
 func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 
@@ -226,7 +303,7 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 	elapsed := float64(time.Since(timeStart)) / float64(time.Duration(1*time.Millisecond))
 
 	if c.rendora.c.Server.Enable {
-		
+
 		c.rendora.metrics.Duration.Observe(elapsed)
 	}
 
@@ -236,7 +313,7 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 		return nil, err
 	}
 	ret := &HeadlessResponse{
-		Content:    domResponse.OuterHTML,
+		Content: domResponse.OuterHTML,
 		Status:  responseReply.Response.Status,
 		Headers: responseHeaders,
 		Latency: elapsed,

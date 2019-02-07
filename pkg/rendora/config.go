@@ -50,6 +50,7 @@ type rendoraConfig struct {
 		Internal    struct {
 			URL string `valid:"url"`
 		}
+		Instances []string `mapstructure:"instances"`
 
 		WaitAfterDOMLoad uint16 `mapstructure:"waitAfterDOMLoad" valid:"range(0|5000)"`
 	} `mapstructure:"headless"`
@@ -128,6 +129,7 @@ func (R *Rendora) initConfig() error {
 	viper.SetDefault("headless.mode", "default")
 	viper.SetDefault("headless.waitAfterDOMLoad", 0)
 	viper.SetDefault("headless.timeout", 15)
+	viper.SetDefault("headless.nodes", 10)
 	viper.SetDefault("headless.internal.url", "http://localhost:9222")
 	viper.SetDefault("filters.useragent.defaultPolicy", "blacklist")
 	viper.SetDefault("filters.paths.defaultPolicy", "whitelist")
@@ -170,11 +172,21 @@ func (R *Rendora) initConfig() error {
 
 	log.Println("Configuration loaded")
 
-	err = R.newHeadlessClient()
-
-	if err != nil {
-		return err
+	R.hPool = make([]*headlessClient, len(R.c.Headless.Instances))
+	R.pool = newPool(len(R.c.Headless.Instances))
+	for index, _ := range R.hPool {
+		err, R.hPool[index] = R.newHeadlessClient2(R.c.Headless.Instances[index])
+		R.pool.putHeadlessClient(R.hPool[index])
+		if err != nil {
+			return err
+		}
 	}
+
+	// err = R.newHeadlessClient()
+
+	// if err != nil {
+	// 	return err
+	// }
 
 	log.Println("Connected to headless Chrome")
 
@@ -192,6 +204,8 @@ type Rendora struct {
 	cache      *cacheStore
 	backendURL *url.URL
 	h          *headlessClient
+	hPool      []*headlessClient
+	pool       *Pool
 	metrics    *metrics
 	cfgFile    string
 }

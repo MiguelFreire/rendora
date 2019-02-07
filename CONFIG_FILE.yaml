@@ -11,7 +11,13 @@ target:
 backend:
     url: "http://localhost:4000" # your backend server url
 headless:
-    waitAfterDOMLoad: 5000
+    instances:
+        - http://localhost:9222
+        - http://localhost:9223
+        - http://localhost:9224
+        - http://localhost:9225
+        - http://localhost:9226
+    waitAfterDOMLoad: 2000
 filters:
     userAgent: # .i.e. only whitelist useragents containing the keywords "bot", "slurp", "bing" or "crawler"
         defaultPolicy: blacklist
