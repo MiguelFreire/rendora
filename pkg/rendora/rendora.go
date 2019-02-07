@@ -46,9 +46,14 @@ func (R *Rendora) middleware() gin.HandlerFunc {
 			R.getProxy(c)
 			return
 		}
-
+		//make a failsafe for ssr, if ssr cant be served fallback to proxy pass
 		if R.isWhitelisted(c) {
-			R.getSSR(c)
+			err := R.getSSR(c)
+			if err != nil {
+				R.getProxy(c)
+				return
+			}
+			return
 		} else {
 			R.getProxy(c)
 		}

@@ -15,7 +15,6 @@ package rendora
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
@@ -86,7 +85,11 @@ func getHeadlessExternal(uri string) (*HeadlessResponse, error) {
 var targetURL string
 
 func (R *Rendora) getHeadless(uri string) (*HeadlessResponse, error) {
-	return R.h.getResponse(R.c.Target.URL + uri)
+	headless := R.pool.getHeadlessClient()
+	response, err := headless.getResponse(R.c.Target.URL + uri)
+	R.pool.putHeadlessClient(headless)
+
+	return response, err
 }
 
 func (R *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
@@ -119,12 +122,12 @@ func (R *Rendora) getResponse(uri string) (*HeadlessResponse, error) {
 	return dt, nil
 }
 
-func (R *Rendora) getSSR(c *gin.Context) {
+func (R *Rendora) getSSR(c *gin.Context) error {
 
 	resp, err := R.getResponse(c.Request.RequestURI)
 	if err != nil {
-		c.AbortWithStatus(http.StatusServiceUnavailable)
-		return
+		//c.AbortWithStatus(http.StatusServiceUnavailable)
+		return err
 	}
 
 	contentHdr, ok := resp.Headers["Content-Type"]
@@ -139,4 +142,5 @@ func (R *Rendora) getSSR(c *gin.Context) {
 		R.metrics.CountSSR.Inc()
 	}
 
+	return nil
 }
