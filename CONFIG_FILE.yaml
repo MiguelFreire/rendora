@@ -24,22 +24,16 @@ headless:
         - http://localhost:9232
         - http://localhost:9233
     waitAfterDOMLoad: 3000
+output:
+    minify: true
 filters:
     userAgent: # .i.e. only whitelist useragents containing the keywords "bot", "slurp", "bing" or "crawler"
         defaultPolicy: blacklist
         exceptions:
             keywords:
-                - bot
-                - slurp
+                - google
                 - bing
-                - crawler
-                - google 
-                - baidu
-                - bing 
-                - msn
                 - duckduckbot
-                - teoma
-                - slurp
-                - yandex
+                - yahoo
 server:
   enable: true

@@ -100,13 +100,16 @@ func (R *Rendora) getResponse(req *http.Request) (*HeadlessResponse, error) {
 
 	domains := strings.Split(hostname, ".")
 	var url = ""
+	var key = ""
 	if len(domains) == 4 {
 		url = "http://" + domains[0] + "." + domains[1] + ".localhost:4000" + uri
+		key = "http://" + domains[0] + ".localhost:4000" + uri
 	} else {
 		url = "http://" + domains[0] + ".localhost:4000" + uri
+		key = "http://localhost:4000" + uri
 	}
 
-	cKey := R.c.Cache.Redis.KeyPrefix + ":" + url
+	cKey := R.c.Cache.Redis.KeyPrefix + ":" + key
 	resp, exists, err := R.cache.get(cKey)
 
 	if err != nil {

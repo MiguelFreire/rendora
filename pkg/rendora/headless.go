@@ -293,6 +293,13 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 		return nil, err
 	}
 
+	reply, err := c.C.DOM.QuerySelectorAll(ctx, dom.NewQuerySelectorAllArgs(1, "style"))
+	var nodes []dom.NodeID
+	nodes = reply.NodeIDs
+	for _, node := range nodes {
+		c.C.DOM.RemoveNode(ctx, dom.NewRemoveNodeArgs(node))
+	}
+
 	domResponse, err := c.C.DOM.GetOuterHTML(ctx, &dom.GetOuterHTMLArgs{
 		NodeID: &doc.Root.NodeID,
 	})
@@ -312,8 +319,16 @@ func (c *headlessClient) getResponse(uri string) (*HeadlessResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// reg, err := regexp.Compile(`(?s)<style type="text/css">(.*?)</style>`)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// processedDOM := reg.ReplaceAllString(domResponse.OuterHTML, "")
+	processedDOM := domResponse.OuterHTML
 	ret := &HeadlessResponse{
-		Content: domResponse.OuterHTML,
+		Content: processedDOM,
 		Status:  responseReply.Response.Status,
 		Headers: responseHeaders,
 		Latency: elapsed,
