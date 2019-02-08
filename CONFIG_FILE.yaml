@@ -35,5 +35,16 @@ filters:
                 - bing
                 - duckduckbot
                 - yahoo
+    paths:
+        defaultPolicy: whitelist
+        exceptions:
+            prefix:
+             - /store/
+             - /search
+             - /editorial/
+             - /thank-you
+            exact:
+             - /thank-you
+             - /search
 server:
   enable: true
