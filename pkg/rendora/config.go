@@ -90,6 +90,7 @@ type rendoraConfig struct {
 				Prefix []string
 			} `mapstructure:"exceptions"`
 		} `mapstructure:"paths"`
+		Extensions []string `valid:"lowercase"`
 	} `mapstructure:"filters"`
 
 	Server struct {

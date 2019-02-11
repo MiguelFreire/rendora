@@ -81,6 +81,12 @@ func (R *Rendora) isWhitelisted(c *gin.Context) bool {
 
 	uri := c.Request.RequestURI
 
+	for _, extension := range R.c.Filters.Extensions {
+		if strings.HasSuffix(uri, extension) {
+			return false
+		}
+	}
+
 	switch filters.Paths.Default {
 	case "blacklist":
 		if len(filters.Paths.Exceptions.Exact) > 0 && isInSlice(filters.Paths.Exceptions.Exact, uri) {
