@@ -14,8 +14,6 @@ func (p *Pool) getHeadlessClient() *headlessClient {
 	var h *headlessClient
 	select {
 	case h = <-p.pool:
-	default:
-		//create client if needed
 	}
 
 	return h
@@ -24,7 +22,5 @@ func (p *Pool) getHeadlessClient() *headlessClient {
 func (p *Pool) putHeadlessClient(h *headlessClient) {
 	select {
 	case p.pool <- h:
-	default:
-		//something
 	}
 }

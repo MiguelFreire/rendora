@@ -12,18 +12,18 @@ backend:
     url: "http://localhost:4000" # your backend server url
 headless:
     instances:
+        - http://localhost:9222
         - http://localhost:9223
         - http://localhost:9224
         - http://localhost:9225
         - http://localhost:9226
-        - http://localhost:9227
-        - http://localhost:9228
-        - http://localhost:9229
-        - http://localhost:9230
-        - http://localhost:9231
-        - http://localhost:9232
-        - http://localhost:9233
-    waitAfterDOMLoad: 3000
+        # - http://localhost:9228
+        # - http://localhost:9229
+        # - http://localhost:9230
+        # - http://localhost:9231
+        # - http://localhost:9232
+        # - http://localhost:9233
+    waitAfterDOMLoad: 5000
 output:
     minify: true
 filters:
@@ -46,5 +46,10 @@ filters:
             exact:
              - /thank-you
              - /search
+    extensions:
+        - .css
+        - .js
+        - .txt
+        - .ico
 server:
   enable: true
